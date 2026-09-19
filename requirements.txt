@@ -1,0 +1,7 @@
+datasets
+transformers
+accelerate
+evaluate
+huggingface_hub
+soundfile
+librosa

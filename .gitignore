@@ -1,0 +1,11 @@
+# python
+__pycache__/
+*.pyc
+
+# env
+.env*
+!.env.example
+
+# training caches
+training-data/.cache/
+naat-classifier-checkpoints/
