@@ -31,6 +31,12 @@ const TEMP_DIR = join(__dirname, ".tmp");
 const NAAT_DIR = join(OUTPUT_DIR, "naat");
 const EXPLANATION_DIR = join(OUTPUT_DIR, "explanation");
 
+// Chunks quieter than this RMS are treated as silence and EXCLUDED from training.
+// Labeling quiet audio as either class teaches the model "quiet = explanation",
+// which makes inference cut quiet naat passages. Keep it out entirely.
+// NaNAT chunks here sit at RMS >= ~0.05; quiet speech drops below ~0.03.
+const SILENCE_RMS_THRESHOLD = 0.03;
+
 const SOURCE_AUDIO = process.argv[2];
 const END_SECONDS = parseFloat(process.argv[3]);
 
@@ -116,12 +122,46 @@ function extractChunk(inputPath, start, duration, outputPath) {
   ]);
 }
 
+/**
+ * Compute RMS (root mean square) of a 16-bit PCM mono WAV file.
+ */
+function rmsOfWavFile(filePath) {
+  const buf = require("fs").readFileSync(filePath);
+  let off = 12;
+  while (off < buf.length && buf.readUInt32LE(off) !== 0x61746164) {
+    const sz = buf.readUInt32LE(off + 4);
+    off += 8 + sz + (sz % 2);
+  }
+  const dataStart = off + 8;
+  const n = Math.floor((buf.length - dataStart) / 2);
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const s = buf.readInt16LE(dataStart + i * 2) / 32768;
+    sum += s * s;
+  }
+  return Math.sqrt(sum / Math.max(1, n));
+}
+
 function extractAll(labelDir, label, inputPath, chunks) {
+  const kept = [];
+  let skipped = 0;
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
-    const filename = `${SOURCE_ID}_${label === "naat" ? "naat" : "expl"}_${String(i).padStart(3, "0")}.wav`;
-    extractChunk(inputPath, chunk.start, chunk.end - chunk.start, join(labelDir, filename));
+    const suffix = label === "naat" ? "naat" : "expl";
+    const filename = `${SOURCE_ID}_${suffix}_${String(kept.length).padStart(3, "0")}.wav`;
+    const outPath = join(labelDir, filename);
+    extractChunk(inputPath, chunk.start, chunk.end - chunk.start, outPath);
+
+    const rms = rmsOfWavFile(outPath);
+    if (rms < SILENCE_RMS_THRESHOLD) {
+      try { unlinkSync(outPath); } catch { /* ignore */ }
+      skipped++;
+      console.log(`     skipping ${filename} (RMS ${rms.toFixed(4)} < ${SILENCE_RMS_THRESHOLD})`);
+      continue;
+    }
+    kept.push({ ...chunk, filename });
   }
+  return { kept, skipped };
 }
 
 // ── Main ──────────────────────────────────────────────────────
@@ -159,26 +199,26 @@ function main() {
   console.log(`  Naat ranges: ${naatRanges.map((r) => `${r.start}-${r.end}`).join(", ")}`);
   console.log(`  Explanation ranges: ${explanationRanges.map((r) => `${r.start}-${r.end}`).join(", ")}\n`);
 
-  const naatChunks = splitIntoChunks(naatRanges, CHUNK_DURATION);
-  const explanationChunks = splitIntoChunks(explanationRanges, CHUNK_DURATION);
-  console.log(`  Chunks: ${naatChunks.length} naat, ${explanationChunks.length} explanation`);
+  const rawNaatChunks = splitIntoChunks(naatRanges, CHUNK_DURATION);
+  const rawExplanationChunks = splitIntoChunks(explanationRanges, CHUNK_DURATION);
+  console.log(`  Chunks: ${rawNaatChunks.length} naat, ${rawExplanationChunks.length} explanation`);
 
   console.log("\n🎧 Extracting naat chunks...");
-  extractAll(NAAT_DIR, "naat", trimmedPath, naatChunks);
+  const { kept: naatChunks, skipped: skippedNaat } = extractAll(NAAT_DIR, "naat", trimmedPath, rawNaatChunks);
   console.log("🎙️  Extracting explanation chunks...");
-  extractAll(EXPLANATION_DIR, "explanation", trimmedPath, explanationChunks);
+  const { kept: explanationChunks, skipped: skippedExpl } = extractAll(EXPLANATION_DIR, "explanation", trimmedPath, rawExplanationChunks);
 
   // ── Manifest ─────────────────────────────────────────────
   const manifest = [];
-  naatChunks.forEach((c, i) => manifest.push({
-    file: `naat/${SOURCE_ID}_naat_${String(i).padStart(3, "0")}.wav`,
+  naatChunks.forEach((c) => manifest.push({
+    file: `naat/${c.filename}`,
     label: "naat",
     source: SOURCE_ID,
     start: c.start,
     end: c.end,
   }));
-  explanationChunks.forEach((c, i) => manifest.push({
-    file: `explanation/${SOURCE_ID}_expl_${String(i).padStart(3, "0")}.wav`,
+  explanationChunks.forEach((c) => manifest.push({
+    file: `explanation/${c.filename}`,
     label: "explanation",
     source: SOURCE_ID,
     start: c.start,
@@ -202,6 +242,9 @@ function main() {
   console.log(`  Total chunks:       ${total}`);
   console.log(`  Naat chunks:        ${naatChunks.length}`);
   console.log(`  Explanation chunks: ${explanationChunks.length}`);
+  if (skippedNaat || skippedExpl) {
+    console.log(`  Silence dropped:    ${skippedNaat + skippedExpl} (naat ${skippedNaat}, explanation ${skippedExpl})`);
+  }
   console.log(`  Class balance:      ${((naatChunks.length / total) * 100).toFixed(1)}% naat / ${((explanationChunks.length / total) * 100).toFixed(1)}% explanation`);
   console.log("════════════════════════════════════════\n");
 }
