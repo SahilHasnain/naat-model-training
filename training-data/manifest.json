@@ -129,43 +129,36 @@
     "file": "naat/om7nbXHFjMk_naat_018.wav",
     "label": "naat",
     "source": "om7nbXHFjMk",
-    "start": 214,
-    "end": 219
+    "start": 215.688063,
+    "end": 220.688063
   },
   {
     "file": "naat/om7nbXHFjMk_naat_019.wav",
     "label": "naat",
     "source": "om7nbXHFjMk",
-    "start": 219,
-    "end": 224
+    "start": 220.688063,
+    "end": 225.688063
   },
   {
     "file": "naat/om7nbXHFjMk_naat_020.wav",
     "label": "naat",
     "source": "om7nbXHFjMk",
-    "start": 224,
-    "end": 229
+    "start": 225.688063,
+    "end": 230.688063
   },
   {
     "file": "naat/om7nbXHFjMk_naat_021.wav",
     "label": "naat",
     "source": "om7nbXHFjMk",
-    "start": 229,
-    "end": 234
+    "start": 230.688063,
+    "end": 235.688063
   },
   {
     "file": "naat/om7nbXHFjMk_naat_022.wav",
     "label": "naat",
     "source": "om7nbXHFjMk",
-    "start": 234,
-    "end": 239
-  },
-  {
-    "file": "naat/om7nbXHFjMk_naat_023.wav",
-    "label": "naat",
-    "source": "om7nbXHFjMk",
-    "start": 239,
-    "end": 242
+    "start": 235.688063,
+    "end": 240.688063
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_000.wav",
@@ -179,153 +172,139 @@
     "label": "explanation",
     "source": "om7nbXHFjMk",
     "start": 63,
-    "end": 68
+    "end": 67.913438
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_002.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 68,
-    "end": 73
+    "start": 68.4335,
+    "end": 71.49125
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_003.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 73,
-    "end": 78
+    "start": 74.0005,
+    "end": 78.276688
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_004.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 78,
-    "end": 83
+    "start": 82.204063,
+    "end": 86.0925
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_005.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 83,
-    "end": 88
+    "start": 86.845938,
+    "end": 91.444438
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_006.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 88,
-    "end": 93
+    "start": 92.65775,
+    "end": 97.65775
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_007.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 93,
-    "end": 98
+    "start": 97.65775,
+    "end": 100.4585
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_008.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 98,
-    "end": 103
+    "start": 101.416625,
+    "end": 106.416625
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_009.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 103,
-    "end": 108
+    "start": 106.416625,
+    "end": 111.416625
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_010.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 108,
-    "end": 113
+    "start": 111.416625,
+    "end": 116.416625
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_011.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 113,
-    "end": 118
+    "start": 120.428625,
+    "end": 125.428625
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_012.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 118,
-    "end": 123
+    "start": 125.428625,
+    "end": 128.742938
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_013.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 123,
-    "end": 128
+    "start": 129.4005,
+    "end": 134.4005
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_014.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 128,
-    "end": 133
+    "start": 134.4005,
+    "end": 139.4005
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_015.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 133,
-    "end": 138
+    "start": 139.4005,
+    "end": 144.4005
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_016.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 138,
-    "end": 143
+    "start": 144.4005,
+    "end": 149.4005
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_017.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 143,
-    "end": 148
+    "start": 149.4005,
+    "end": 154.4005
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_018.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 148,
-    "end": 153
+    "start": 154.4005,
+    "end": 157
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_019.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 153,
-    "end": 157
+    "start": 196.790437,
+    "end": 201.242063
   },
   {
     "file": "explanation/om7nbXHFjMk_expl_020.wav",
     "label": "explanation",
     "source": "om7nbXHFjMk",
-    "start": 194,
-    "end": 199
-  },
-  {
-    "file": "explanation/om7nbXHFjMk_expl_021.wav",
-    "label": "explanation",
-    "source": "om7nbXHFjMk",
-    "start": 199,
-    "end": 204
-  },
-  {
-    "file": "explanation/om7nbXHFjMk_expl_022.wav",
-    "label": "explanation",
-    "source": "om7nbXHFjMk",
     "start": 242,
-    "end": 246
+    "end": 245.058063
   }
 ]

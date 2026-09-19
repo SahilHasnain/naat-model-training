@@ -19,7 +19,7 @@
  *   (uses EXPLANATION_SEGMENTS below for labeling)
  */
 
-const { execFileSync } = require("child_process");
+const { execFileSync, spawnSync } = require("child_process");
 const { existsSync, mkdirSync, writeFileSync, unlinkSync, rmSync, readdirSync } = require("fs");
 const { join } = require("path");
 
@@ -36,6 +36,13 @@ const EXPLANATION_DIR = join(OUTPUT_DIR, "explanation");
 // which makes inference cut quiet naat passages. Keep it out entirely.
 // NaNAT chunks here sit at RMS >= ~0.05; quiet speech drops below ~0.03.
 const SILENCE_RMS_THRESHOLD = 0.03;
+
+// Silence-span carving: spans quieter than SILENCE_DB (dB) lasting at least
+// SILENCE_MIN_DURATION (s) are removed from BOTH naat and explanation ranges
+// before chunking, so transition silence between naat and explanation is never
+// labeled as either class.
+const SILENCE_DB = -35;
+const SILENCE_MIN_DURATION = 0.5;
 
 const SOURCE_AUDIO = process.argv[2];
 const END_SECONDS = parseFloat(process.argv[3]);
@@ -142,6 +149,52 @@ function rmsOfWavFile(filePath) {
   return Math.sqrt(sum / Math.max(1, n));
 }
 
+/**
+ * Detect silence spans in a WAV via ffmpeg silencedetect.
+ * Returns [{ start, end }, ...] in seconds.
+ */
+function detectSilence(filePath, noiseDb, minDuration) {
+  const res = spawnSync("ffmpeg", [
+    "-hide_banner", "-nostats",
+    "-i", filePath,
+    "-af", `silencedetect=noise=${noiseDb}dB:d=${minDuration}`,
+    "-f", "null", "-",
+  ], { encoding: "utf8" });
+
+  const text = (res.stderr || "") + (res.stdout || "");
+  const spans = [];
+  const lines = text.split("\n");
+  let cur = null;
+  for (const line of lines) {
+    let m = line.match(/silence_start: ([\d.]+)/);
+    if (m) { cur = { start: parseFloat(m[1]) }; continue; }
+    m = line.match(/silence_end: ([\d.]+)/);
+    if (m && cur) {
+      cur.end = parseFloat(m[1]);
+      if (cur.end - cur.start >= minDuration) spans.push(cur);
+      cur = null;
+    }
+  }
+  return spans;
+}
+
+/**
+ * Subtract a list of silent spans from a list of labeled ranges.
+ */
+function carveSilence(ranges, silenceSpans) {
+  const out = [];
+  for (const range of ranges) {
+    let cursor = range.start;
+    for (const s of silenceSpans) {
+      if (s.end <= cursor || s.start >= range.end) continue;
+      if (s.start > cursor) out.push({ start: cursor, end: Math.min(s.start, range.end) });
+      cursor = Math.max(cursor, s.end);
+    }
+    if (cursor < range.end) out.push({ start: cursor, end: range.end });
+  }
+  return out.filter((r) => r.end - r.start >= 1); // drop crumbs < 1s
+}
+
 function extractAll(labelDir, label, inputPath, chunks) {
   const kept = [];
   let skipped = 0;
@@ -199,8 +252,18 @@ function main() {
   console.log(`  Naat ranges: ${naatRanges.map((r) => `${r.start}-${r.end}`).join(", ")}`);
   console.log(`  Explanation ranges: ${explanationRanges.map((r) => `${r.start}-${r.end}`).join(", ")}\n`);
 
-  const rawNaatChunks = splitIntoChunks(naatRanges, CHUNK_DURATION);
-  const rawExplanationChunks = splitIntoChunks(explanationRanges, CHUNK_DURATION);
+  // Carve transition/embedded silence out of BOTH classes so silence is never
+  // labeled naat or explanation.
+  const silenceSpans = detectSilence(trimmedPath, SILENCE_DB, SILENCE_MIN_DURATION);
+  const carvedNaat = carveSilence(naatRanges, silenceSpans);
+  const carvedExpl = carveSilence(explanationRanges, silenceSpans);
+  if (silenceSpans.length) {
+    console.log(`  Silence spans (${SILENCE_DB}dB, >=${SILENCE_MIN_DURATION}s): ${silenceSpans.map((s) => s.start.toFixed(1) + "-" + s.end.toFixed(1)).join(", ")}`);
+    console.log(`  After carving: ${carvedNaat.map((r) => `${r.start}-${r.end}`).join(", ")}\n`);
+  }
+
+  const rawNaatChunks = splitIntoChunks(carvedNaat, CHUNK_DURATION);
+  const rawExplanationChunks = splitIntoChunks(carvedExpl, CHUNK_DURATION);
   console.log(`  Chunks: ${rawNaatChunks.length} naat, ${rawExplanationChunks.length} explanation`);
 
   console.log("\n🎧 Extracting naat chunks...");
