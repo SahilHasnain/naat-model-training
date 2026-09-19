@@ -9,3 +9,4 @@ __pycache__/
 # training caches
 training-data/.cache/
 naat-classifier-checkpoints/
+.tmp/
