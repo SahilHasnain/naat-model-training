@@ -2,8 +2,8 @@
 Run the app's exact inference logic against a trained model on a full audio file.
 
 Mirrors apps/ai-service/classifier_fixed.py (per-second sliding-window voting,
-explanation_threshold, merge_gap, RMS boundary refinement) so results are
-comparable to what the app would produce, but loads a local model.
+explanation_threshold, merge_gap, confidence-crossing boundary refinement) so
+results are comparable to what the app would produce, but loads a local model.
 
 Usage:
   python eval-full-audio.py <audio.wav> [--model path-or-id] [--threshold 0.6]
@@ -136,7 +136,7 @@ class AudioClassifier:
                 traj, wins_a_over_b=(direction == "start"), hyst=1
             )
         if crossing is None:
-            print(f"  no confident crossing near {rough_time:.1f}s ({direction}) — using RMS")
+            print(f"  no confident crossing near {rough_time:.1f}s ({direction}) — keeping coarse boundary")
             return None
         refined = crossing + self.boundary_offset
         # Edge guard: only accept if comfortably inside the scanned window.
@@ -148,7 +148,7 @@ class AudioClassifier:
             if grad is not None:
                 print(f"  no clean crossing, using prob gradient {grad:.2f}s ({direction})")
                 return grad
-            print(f"  refined {refined:.2f}s outside window ({direction}) — using RMS")
+            print(f"  refined {refined:.2f}s outside window ({direction}) — keeping coarse boundary")
             return None
         return round(refined, 2)
 
@@ -168,31 +168,6 @@ class AudioClassifier:
                 best_g = g
                 best = traj[i][0]
         return round(best + self.boundary_offset / 2.0, 2) if best is not None else None
-
-    def find_transition_point(self, audio, rough_time, search_radius=2.5):
-        sr = self.sample_rate
-        start_sample = max(0, int((rough_time - search_radius) * sr))
-        end_sample = min(len(audio), int((rough_time + search_radius) * sr))
-        segment = audio[start_sample:end_sample]
-
-        if len(segment) < sr * 0.5:
-            return rough_time
-
-        frame_length = int(0.1 * sr)
-        hop = frame_length // 2
-        rms = []
-        for i in range(0, len(segment) - frame_length, hop):
-            frame = segment[i : i + frame_length]
-            rms.append(np.sqrt(np.mean(frame**2)))
-
-        if len(rms) < 3:
-            return rough_time
-
-        rms = np.array(rms)
-        diff = np.abs(np.diff(rms))
-        peak_idx = np.argmax(diff)
-        refined_time = rough_time - search_radius + (peak_idx * hop) / sr
-        return max(0.0, round(refined_time, 2))
 
     def classify_audio(self, audio):
         total_duration = len(audio) / self.sample_rate
@@ -296,14 +271,10 @@ class AudioClassifier:
                     refined = self.find_conf_boundary(audio, seg["start"], "start")
                     if refined is not None:
                         seg["start"] = refined
-                    else:
-                        seg["start"] = self.find_transition_point(audio, seg["start"])
                 if seg["end"] < total_duration:
                     refined = self.find_conf_boundary(audio, seg["end"], "end")
                     if refined is not None:
                         seg["end"] = refined
-                    else:
-                        seg["end"] = self.find_transition_point(audio, seg["end"])
 
         speech_segments = []
         for seg in merged:
