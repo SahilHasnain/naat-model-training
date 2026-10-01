@@ -9,6 +9,10 @@ Usage:
   python eval-full-audio.py <audio.wav> [--model path-or-id] [--threshold 0.6]
 """
 
+import utils.clients
+import utils.http_session
+import utils.transport
+import utils.session
 import argparse
 import sys
 

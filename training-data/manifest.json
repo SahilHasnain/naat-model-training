@@ -306,5 +306,89 @@
     "source": "om7nbXHFjMk",
     "start": 242,
     "end": 245.058063
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-00.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-01.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-02.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-03.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-04.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-05.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-06.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-07.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-08.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-09.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-10.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
+  },
+  {
+    "file": "explanation/synthetic-silence-explanation-11.wav",
+    "label": "explanation",
+    "source": "synthetic-silence-v1",
+    "start": 0,
+    "end": 5
   }
 ]
