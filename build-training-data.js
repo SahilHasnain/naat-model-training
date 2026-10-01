@@ -31,16 +31,11 @@ const TEMP_DIR = join(__dirname, ".tmp");
 const NAAT_DIR = join(OUTPUT_DIR, "naat");
 const EXPLANATION_DIR = join(OUTPUT_DIR, "explanation");
 
-// Chunks quieter than this RMS are treated as silence and EXCLUDED from training.
-// Labeling quiet audio as either class teaches the model "quiet = explanation",
-// which makes inference cut quiet naat passages. Keep it out entirely.
-// NaNAT chunks here sit at RMS >= ~0.05; quiet speech drops below ~0.03.
+// Keep the RMS guard for naat chunks so empty extracts do not become naat
+// examples. Silence is intentionally included in explanation data.
 const SILENCE_RMS_THRESHOLD = 0.03;
 
-// Silence-span carving: spans quieter than SILENCE_DB (dB) lasting at least
-// SILENCE_MIN_DURATION (s) are removed from BOTH naat and explanation ranges
-// before chunking, so transition silence between naat and explanation is never
-// labeled as either class.
+// Silence spans are treated as explanation ranges and removed from naat ranges.
 const SILENCE_DB = -35;
 const SILENCE_MIN_DURATION = 0.5;
 
@@ -195,6 +190,19 @@ function carveSilence(ranges, silenceSpans) {
   return out.filter((r) => r.end - r.start >= 1); // drop crumbs < 1s
 }
 
+function mergeRanges(ranges) {
+  const sorted = [...ranges].sort((a, b) => a.start - b.start);
+  return sorted.reduce((merged, range) => {
+    const previous = merged[merged.length - 1];
+    if (previous && range.start <= previous.end) {
+      previous.end = Math.max(previous.end, range.end);
+    } else {
+      merged.push({ ...range });
+    }
+    return merged;
+  }, []);
+}
+
 function extractAll(labelDir, label, inputPath, chunks) {
   const kept = [];
   let skipped = 0;
@@ -206,7 +214,7 @@ function extractAll(labelDir, label, inputPath, chunks) {
     extractChunk(inputPath, chunk.start, chunk.end - chunk.start, outPath);
 
     const rms = rmsOfWavFile(outPath);
-    if (rms < SILENCE_RMS_THRESHOLD) {
+    if (label === "naat" && rms < SILENCE_RMS_THRESHOLD) {
       try { unlinkSync(outPath); } catch { /* ignore */ }
       skipped++;
       console.log(`     skipping ${filename} (RMS ${rms.toFixed(4)} < ${SILENCE_RMS_THRESHOLD})`);
@@ -252,14 +260,14 @@ function main() {
   console.log(`  Naat ranges: ${naatRanges.map((r) => `${r.start}-${r.end}`).join(", ")}`);
   console.log(`  Explanation ranges: ${explanationRanges.map((r) => `${r.start}-${r.end}`).join(", ")}\n`);
 
-  // Carve transition/embedded silence out of BOTH classes so silence is never
-  // labeled naat or explanation.
+  // Silence is explanation for the new model; remove it from naat ranges and
+  // merge it into the explanation ranges.
   const silenceSpans = detectSilence(trimmedPath, SILENCE_DB, SILENCE_MIN_DURATION);
   const carvedNaat = carveSilence(naatRanges, silenceSpans);
-  const carvedExpl = carveSilence(explanationRanges, silenceSpans);
+  const carvedExpl = mergeRanges([...explanationRanges, ...silenceSpans]);
   if (silenceSpans.length) {
     console.log(`  Silence spans (${SILENCE_DB}dB, >=${SILENCE_MIN_DURATION}s): ${silenceSpans.map((s) => s.start.toFixed(1) + "-" + s.end.toFixed(1)).join(", ")}`);
-    console.log(`  After carving: ${carvedNaat.map((r) => `${r.start}-${r.end}`).join(", ")}\n`);
+    console.log(`  Silence added to explanation; naat ranges after carving: ${carvedNaat.map((r) => `${r.start}-${r.end}`).join(", ")}\n`);
   }
 
   const rawNaatChunks = splitIntoChunks(carvedNaat, CHUNK_DURATION);
